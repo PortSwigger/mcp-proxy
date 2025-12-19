@@ -30,3 +30,25 @@ It enables tools that use standard I/O for communication such as Claude Desktop 
 # Run a specific test
 ./gradlew test --tests "net.portswigger.TestName"
 ```
+
+## Usage with Antigravity
+
+Add the following to your Antigravity MCP configuration (`mcp_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "burp": {
+      "command": "java",
+      "args": [
+        "-jar",
+        "/path/to/mcp-proxy-all.jar",
+        "--sse-url",
+        "http://127.0.0.1:9876/"
+      ]
+    }
+  }
+}
+```
+
+**Note:** Make sure Burp Suite is running with the [MCP Server extension](https://github.com/PortSwigger/mcp-server) installed and enabled before starting Antigravity.

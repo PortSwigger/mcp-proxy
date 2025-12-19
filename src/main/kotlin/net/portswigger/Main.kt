@@ -39,9 +39,19 @@ fun sseToStdio(args: SseToStdioArgs) = runBlocking {
     }
 
     val sseClient = sseClientManager.getClient()
+    // Ensure capabilities always include tools since Burp MCP Server supports them
+    // If serverCapabilities is null (disconnected state), create default caps with tools enabled
+    val serverCaps = sseClient.serverCapabilities ?: ServerCapabilities()
+    val capsWithTools = ServerCapabilities(
+        tools = serverCaps.tools ?: ServerCapabilities.Tools(listChanged = true),
+        resources = serverCaps.resources,
+        prompts = serverCaps.prompts,
+        logging = serverCaps.logging,
+        experimental = serverCaps.experimental
+    )
     val stdioServer = Server(
         serverInfo = sseClient.serverVersion ?: Implementation("burp-suite", "1.0"), options = ServerOptions(
-            capabilities = sseClient.serverCapabilities ?: ServerCapabilities()
+            capabilities = capsWithTools
         )
     )
 

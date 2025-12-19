@@ -3,6 +3,7 @@ package net.portswigger
 import io.ktor.client.*
 import io.ktor.client.plugins.*
 import io.ktor.client.plugins.sse.*
+import io.ktor.client.request.*
 import io.modelcontextprotocol.kotlin.sdk.Implementation
 import io.modelcontextprotocol.kotlin.sdk.ResourceListChangedNotification
 import io.modelcontextprotocol.kotlin.sdk.ToolListChangedNotification
@@ -24,11 +25,17 @@ class SseClient(
     override val coroutineContext = SupervisorJob() + Dispatchers.IO
 
     private val client = Client(clientInfo = clientInfo)
+    private val baseUrl = sseUrl.removeSuffix("/sse").removeSuffix("/")
     private val httpClient = HttpClient {
         install(SSE)
         install(HttpTimeout) {
             requestTimeoutMillis = 30000
             connectTimeoutMillis = 15000
+        }
+        defaultRequest {
+            header("Origin", baseUrl)
+            header("Referer", baseUrl)
+            header("User-Agent", "MCP-Proxy")
         }
     }
 
@@ -40,7 +47,15 @@ class SseClient(
     private var monitorJob: Job? = null
 
     private fun createTransport(): SseClientTransport {
-        return SseClientTransport(httpClient, sseUrl)
+        return SseClientTransport(
+            client = httpClient,
+            urlString = sseUrl,
+            requestBuilder = {
+                header("Origin", baseUrl)
+                header("Referer", baseUrl)
+                header("User-Agent", "MCP-Proxy")
+            }
+        )
     }
 
     private fun startMonitoring() {
