@@ -1,6 +1,6 @@
 package net.portswigger
 
-import io.modelcontextprotocol.kotlin.sdk.TextContent
+import io.modelcontextprotocol.kotlin.sdk.types.TextContent
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
@@ -68,7 +68,7 @@ class StdioClientReconnectionTest {
 
         logger.info("Test client connected to proxy")
 
-        assertDoesNotThrow { testClient.ping() }
+        testClient.ping()
     }
 
     @AfterEach
@@ -128,7 +128,7 @@ class StdioClientReconnectionTest {
 
         logger.info("Sending ping after server restart...")
 
-        assertDoesNotThrow { testClient.ping() }
+        testClient.ping()
 
         logger.info("Testing tool call after server restart...")
 

@@ -1,8 +1,7 @@
 package net.portswigger
 
-import io.modelcontextprotocol.kotlin.sdk.CallToolRequest
-import io.modelcontextprotocol.kotlin.sdk.Implementation
-import io.modelcontextprotocol.kotlin.sdk.TextContent
+import io.modelcontextprotocol.kotlin.sdk.types.Implementation
+import io.modelcontextprotocol.kotlin.sdk.types.TextContent
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
@@ -15,7 +14,7 @@ import kotlin.test.assertTrue
 class ServerRestartTest {
     private var serverPort = 0
     private lateinit var client: SseClient
-    
+
     @BeforeEach
     fun setup() {
         serverPort = TestMcpServer.startServer(serverPort)
@@ -24,7 +23,7 @@ class ServerRestartTest {
             clientInfo = Implementation("test-client", "1.0.0")
         )
     }
-    
+
     @AfterEach
     fun tearDown() {
         TestMcpServer.stopServer()
@@ -38,7 +37,7 @@ class ServerRestartTest {
         assertEquals(ConnectionState.CONNECTED, client.connectionState.value)
 
         val initialResult = client.withConnection { c ->
-            c.callTool(CallToolRequest("kotlin-sdk-tool"))
+            c.callTool("kotlin-sdk-tool", emptyMap())
         }
         assertNotNull(initialResult, "Initial tool call should succeed")
         assertEquals("Hello, world!", (initialResult.content.first() as TextContent).text)
@@ -48,7 +47,7 @@ class ServerRestartTest {
 
         try {
             client.withConnection { c ->
-                c.callTool(CallToolRequest("kotlin-sdk-tool"))
+                c.callTool("kotlin-sdk-tool", emptyMap())
             }
         } catch (e: Exception) {
             // Expected exception
@@ -58,7 +57,7 @@ class ServerRestartTest {
         delay(3000)
 
         val result = client.withConnection { c ->
-            c.callTool(CallToolRequest("kotlin-sdk-tool"))
+            c.callTool("kotlin-sdk-tool", emptyMap())
         }
 
         assertNotNull(result, "Tool call after reconnection should succeed")
@@ -72,7 +71,7 @@ class ServerRestartTest {
         assertEquals(ConnectionState.CONNECTED, client.connectionState.value)
 
         val initialResult = client.withConnection { c ->
-            c.callTool(CallToolRequest("kotlin-sdk-tool"))
+            c.callTool("kotlin-sdk-tool", emptyMap())
         }
         assertNotNull(initialResult, "Initial tool call should succeed")
         assertEquals("Hello, world!", (initialResult.content.first() as TextContent).text)
@@ -84,25 +83,25 @@ class ServerRestartTest {
         delay(3000)
 
         val result = client.withConnection { c ->
-            c.callTool(CallToolRequest("kotlin-sdk-tool"))
+            c.callTool("kotlin-sdk-tool", emptyMap())
         }
 
         assertNotNull(result, "Tool call after reconnection should succeed")
         assertEquals("Hello, world!", (result.content.first() as TextContent).text)
     }
-    
+
     @Test
     fun `client should automatically reconnect if disconnected`() = runBlocking {
         client.connect()
-        
+
         TestUtils.setConnectionState(client, ConnectionState.DISCONNECTED)
-        
+
         assertEquals(ConnectionState.DISCONNECTED, client.connectionState.value)
-        
+
         val result = client.withConnection { c ->
-            c.callTool(CallToolRequest("kotlin-sdk-tool"))
+            c.callTool("kotlin-sdk-tool", emptyMap())
         }
-        
+
         assertNotNull(result, "Tool call after forced disconnect should succeed")
         assertEquals("Hello, world!", (result.content.first() as TextContent).text)
         assertEquals(ConnectionState.CONNECTED, client.connectionState.value)

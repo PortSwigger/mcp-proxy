@@ -1,8 +1,13 @@
 package net.portswigger
 
-import io.modelcontextprotocol.kotlin.sdk.*
 import io.modelcontextprotocol.kotlin.sdk.client.Client
 import io.modelcontextprotocol.kotlin.sdk.client.StdioClientTransport
+import io.modelcontextprotocol.kotlin.sdk.types.CallToolResult
+import io.modelcontextprotocol.kotlin.sdk.types.EmptyResult
+import io.modelcontextprotocol.kotlin.sdk.types.Implementation
+import io.modelcontextprotocol.kotlin.sdk.types.Prompt
+import io.modelcontextprotocol.kotlin.sdk.types.Resource
+import io.modelcontextprotocol.kotlin.sdk.types.Tool
 import kotlinx.io.asSink
 import kotlinx.io.asSource
 import kotlinx.io.buffered
@@ -22,7 +27,7 @@ class TestStdioMcpClient {
         try {
             this.input = input
             this.output = output
-            
+
             val transport = StdioClientTransport(
                 input = input.asSource().buffered(),
                 output = output.asSink().buffered()
@@ -30,8 +35,7 @@ class TestStdioMcpClient {
 
             mcp.connect(transport)
 
-            val toolsResult = mcp.listTools()
-            tools = toolsResult?.tools ?: emptyList()
+            tools = mcp.listTools().tools
             println("Connected to server with tools: ${tools.joinToString(", ") { it.name }}")
         } catch (e: Exception) {
             println("Failed to connect to MCP server: $e")
@@ -39,7 +43,7 @@ class TestStdioMcpClient {
         }
     }
 
-    suspend fun ping(): EmptyRequestResult {
+    suspend fun ping(): EmptyResult {
         try {
             val pingRequest = mcp.ping()
             logger.info("Ping sent: $pingRequest")
@@ -52,8 +56,7 @@ class TestStdioMcpClient {
 
     suspend fun listPrompts(): List<Prompt> {
         try {
-            val promptsResult = mcp.listPrompts()
-            val prompts = promptsResult?.prompts ?: emptyList()
+            val prompts = mcp.listPrompts().prompts
             logger.info("Prompts listed: ${prompts.joinToString(", ")}")
             return prompts
         } catch (e: Exception) {
@@ -64,8 +67,7 @@ class TestStdioMcpClient {
 
     suspend fun listResources(): List<Resource> {
         try {
-            val resourcesResult = mcp.listResources()
-            val resources = resourcesResult?.resources ?: emptyList()
+            val resources = mcp.listResources().resources
             logger.info("Resources listed: ${resources.joinToString(", ")}")
             return resources
         } catch (e: Exception) {
@@ -76,8 +78,7 @@ class TestStdioMcpClient {
 
     suspend fun listTools(): List<Tool> {
         try {
-            val toolsResult = mcp.listTools()
-            tools = toolsResult?.tools ?: emptyList()
+            tools = mcp.listTools().tools
             logger.info("Tools listed: ${tools.joinToString(", ") { it.name }}")
             return tools
         } catch (e: Exception) {
@@ -86,7 +87,7 @@ class TestStdioMcpClient {
         }
     }
 
-    suspend fun testTool(): CallToolResultBase? {
+    suspend fun testTool(): CallToolResult? {
         try {
             val tool = tools.firstOrNull() ?: throw IllegalStateException("No tools available")
             val result = mcp.callTool(tool.name, emptyMap())
