@@ -1,6 +1,6 @@
 package net.portswigger
 
-import io.modelcontextprotocol.kotlin.sdk.Implementation
+import io.modelcontextprotocol.kotlin.sdk.types.Implementation
 import kotlinx.coroutines.*
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach

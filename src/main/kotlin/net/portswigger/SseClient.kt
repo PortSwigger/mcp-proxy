@@ -3,11 +3,11 @@ package net.portswigger
 import io.ktor.client.*
 import io.ktor.client.plugins.*
 import io.ktor.client.plugins.sse.*
-import io.modelcontextprotocol.kotlin.sdk.Implementation
-import io.modelcontextprotocol.kotlin.sdk.ResourceListChangedNotification
-import io.modelcontextprotocol.kotlin.sdk.ToolListChangedNotification
 import io.modelcontextprotocol.kotlin.sdk.client.Client
 import io.modelcontextprotocol.kotlin.sdk.client.SseClientTransport
+import io.modelcontextprotocol.kotlin.sdk.types.Implementation
+import io.modelcontextprotocol.kotlin.sdk.types.ResourceListChangedNotification
+import io.modelcontextprotocol.kotlin.sdk.types.ToolListChangedNotification
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,6 +17,10 @@ import java.io.IOException
 import java.util.concurrent.atomic.AtomicBoolean
 
 private val loggerClient = LoggerFactory.getLogger("net.portswigger.SseClient")
+
+enum class ConnectionState {
+    CONNECTED, CONNECTING, DISCONNECTED
+}
 
 class SseClient(
     private val sseUrl: String, clientInfo: Implementation
@@ -38,6 +42,11 @@ class SseClient(
     private val reconnectAttempted = AtomicBoolean(false)
     private val maxReconnectAttempts = 3
     private var monitorJob: Job? = null
+    private var onConnectedCallback: (suspend () -> Unit)? = null
+
+    fun onConnected(callback: suspend () -> Unit) {
+        onConnectedCallback = callback
+    }
 
     private fun createTransport(): SseClientTransport {
         return SseClientTransport(httpClient, sseUrl)
@@ -113,11 +122,13 @@ class SseClient(
         val transport = createTransport()
 
         return try {
+            client.close()
             client.connect(transport)
             connectionStateMutableStateFlow.value = ConnectionState.CONNECTED
             reconnectAttempted.set(false)
             loggerClient.info("Successfully connected to SSE server at {}", sseUrl)
             stopMonitoring()
+            onConnectedCallback?.invoke()
             true
         } catch (e: Exception) {
             connectionStateMutableStateFlow.value = ConnectionState.DISCONNECTED
@@ -137,6 +148,7 @@ class SseClient(
         for (attempt in 1..maxAttempts) {
             try {
                 val transport = createTransport()
+                client.close()
                 client.connect(transport)
 
                 connectionStateMutableStateFlow.value = ConnectionState.CONNECTED

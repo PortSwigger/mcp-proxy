@@ -1,7 +1,7 @@
 plugins {
-    kotlin("jvm") version "2.1.21"
-    kotlin("plugin.serialization") version "2.1.21"
-    id("io.ktor.plugin") version "3.1.3"
+    kotlin("jvm") version "2.4.0"
+    kotlin("plugin.serialization") version "2.4.0"
+    id("io.ktor.plugin") version "3.3.1"
 }
 
 group = "net.portswigger"
@@ -16,12 +16,14 @@ repositories {
 }
 
 dependencies {
-    implementation("io.modelcontextprotocol:kotlin-sdk:0.6.1")
+    implementation("io.modelcontextprotocol:kotlin-sdk:0.15.0")
+    implementation("io.ktor:ktor-client-cio:3.3.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
     implementation("org.slf4j:slf4j-simple:2.0.17")
 
     testImplementation(kotlin("test"))
-    testImplementation("io.ktor:ktor-serialization-jackson:3.1.3")
+    testImplementation("io.ktor:ktor-server-cio:3.3.1")
+    testImplementation("io.ktor:ktor-serialization-jackson:3.3.1")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
 }
 
