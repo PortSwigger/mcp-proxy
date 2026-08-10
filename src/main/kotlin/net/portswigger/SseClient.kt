@@ -122,6 +122,7 @@ class SseClient(
         val transport = createTransport()
 
         return try {
+            client.close()
             client.connect(transport)
             connectionStateMutableStateFlow.value = ConnectionState.CONNECTED
             reconnectAttempted.set(false)
@@ -147,6 +148,7 @@ class SseClient(
         for (attempt in 1..maxAttempts) {
             try {
                 val transport = createTransport()
+                client.close()
                 client.connect(transport)
 
                 connectionStateMutableStateFlow.value = ConnectionState.CONNECTED

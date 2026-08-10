@@ -67,8 +67,8 @@ fun sseToStdio(args: SseToStdioArgs) = runBlocking {
     registerFeatures(sseClient, stdioServer, sseClientManager)
 
     val transport = StdioServerTransport(
-        inputStream = System.`in`.asSource().buffered(), outputStream = System.out.asSink().buffered()
-    )
+        System.`in`.asSource().buffered(), System.out.asSink().buffered()
+    ) {}
 
     runBlocking {
         try {
