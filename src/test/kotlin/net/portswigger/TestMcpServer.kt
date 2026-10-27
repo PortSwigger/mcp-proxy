@@ -18,7 +18,7 @@ import java.net.ServerSocket
 class TestMcpServer {
     private var port: Int = 0
     private var serverEngine: EmbeddedServer<CIOApplicationEngine, CIOApplicationEngine.Configuration>? = null
-    private val server: Server = configureServer()
+    internal val server: Server = configureServer()
 
     fun start(port: Int = 0): Int {
         this.port = if (port == 0) findAvailablePort() else port

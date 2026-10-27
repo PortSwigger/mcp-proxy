@@ -31,7 +31,7 @@ class SseClient(
     private val httpClient = HttpClient {
         install(SSE)
         install(HttpTimeout) {
-            requestTimeoutMillis = 30000
+            // The MCP SDK timeout notifies the peer so pending approvals are cancelled.
             connectTimeoutMillis = 15000
         }
     }
@@ -130,6 +130,8 @@ class SseClient(
             stopMonitoring()
             onConnectedCallback?.invoke()
             true
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             connectionStateMutableStateFlow.value = ConnectionState.DISCONNECTED
             loggerClient.error("Failed to connect to SSE server at {}: {}", sseUrl, e.message)
@@ -175,6 +177,8 @@ class SseClient(
                 }
 
                 return notificationsSuccess
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 if (attempt < maxAttempts) {
                     loggerClient.warn(
@@ -200,27 +204,10 @@ class SseClient(
                 }
             }
 
-            return runCatching {
-                block(client)
-            }.getOrElse { e ->
-                run {
-                    loggerClient.warn("Connection error detected: {}", e.message)
-                    connectionStateMutableStateFlow.value = ConnectionState.DISCONNECTED
-
-                    if (reconnectWithRetries(maxReconnectAttempts)) {
-                        loggerClient.info("Reconnected successfully, retrying operation")
-                        try {
-                            block(client)
-                        } catch (retryException: Exception) {
-                            loggerClient.error("Operation failed after reconnection: {}", retryException.message)
-                            throw retryException
-                        }
-                    } else {
-                        startMonitoring()
-                        throw IOException("Not connected to SSE server after reconnection attempts", e)
-                    }
-                }
-            }
+            // A failed call may already have side effects; never replay it automatically.
+            return block(client)
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             connectionStateMutableStateFlow.value = ConnectionState.DISCONNECTED
             startMonitoring()
@@ -232,6 +219,8 @@ class SseClient(
         return try {
             client.ping()
             true
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             loggerClient.warn("Connection validation failed: {}", e.message)
             connectionStateMutableStateFlow.value = ConnectionState.DISCONNECTED
