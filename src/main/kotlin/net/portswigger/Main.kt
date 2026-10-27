@@ -6,7 +6,6 @@ import io.modelcontextprotocol.kotlin.sdk.server.ServerOptions
 import io.modelcontextprotocol.kotlin.sdk.server.ServerSession
 import io.modelcontextprotocol.kotlin.sdk.server.StdioServerTransport
 import io.modelcontextprotocol.kotlin.sdk.types.CallToolResult
-import io.modelcontextprotocol.kotlin.sdk.types.CancelledNotification
 import io.modelcontextprotocol.kotlin.sdk.types.Implementation
 import io.modelcontextprotocol.kotlin.sdk.types.InitializedNotification
 import io.modelcontextprotocol.kotlin.sdk.types.LoggingMessageNotification
@@ -163,7 +162,6 @@ private fun setupNotificationForwarding(
     forwardNotification<PromptListChangedNotification>(Method.Defined.NotificationsPromptsListChanged)
     forwardNotification<RootsListChangedNotification>(Method.Defined.NotificationsRootsListChanged)
     forwardNotification<LoggingMessageNotification>(Method.Defined.NotificationsMessage)
-    forwardNotification<CancelledNotification>(Method.Defined.NotificationsCancelled)
     forwardNotification<ProgressNotification>(Method.Defined.NotificationsProgress)
     forwardNotification<InitializedNotification>(Method.Defined.NotificationsInitialized)
 }
